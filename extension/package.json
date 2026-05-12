@@ -191,10 +191,12 @@
     "build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
     "build:backend": "bash ../scripts/build-backend.sh",
     "build:all": "npm run build:backend && npm run build",
+    "bundle:backend-src": "node -e \"const fs=require('fs'),p=require('path');const src='../backend',dst='./backend';fs.rmSync(dst,{recursive:true,force:true});const copy=(s,d)=>{fs.mkdirSync(d,{recursive:true});for(const e of fs.readdirSync(s,{withFileTypes:true})){const sp=p.join(s,e.name),dp=p.join(d,e.name);if(['tests','.venv','__pycache__','build','dist','.pytest_cache','.mypy_cache','.ruff_cache'].includes(e.name))continue;if(e.isDirectory())copy(sp,dp);else fs.copyFileSync(sp,dp);}};copy(src,dst);console.log('Backend source bundled into extension/backend/')\"",
     "watch": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",
-    "package": "npm run build:all && vsce package --allow-missing-repository",
+    "package": "npm run bundle:backend-src && npm run build && vsce package --allow-missing-repository",
+    "package:with-binary": "npm run build:all && npm run bundle:backend-src && vsce package --allow-missing-repository",
     "publish:vscode": "vsce publish",
     "publish:openvsx": "ovsx publish"
   },

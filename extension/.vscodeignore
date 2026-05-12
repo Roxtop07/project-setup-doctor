@@ -10,4 +10,10 @@ tsconfig.json
 !**/*.d.ts
 *.vsix
 
-# Keep bin/ (bundled binary) and dist/ (compiled extension)
+# Keep bin/ (bundled binary), dist/ (compiled extension), and backend/ (Python fallback)
+backend/tests/**
+backend/.venv/**
+backend/__pycache__/**
+backend/**/__pycache__/**
+backend/*.spec
+backend/pyproject.toml

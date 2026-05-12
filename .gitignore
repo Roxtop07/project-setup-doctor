@@ -5,6 +5,7 @@ node_modules/
 dist/
 *.vsix
 extension/bin/
+extension/backend/
 backend/build/
 
 # Python

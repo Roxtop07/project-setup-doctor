@@ -216,14 +216,20 @@ export class BackendManager implements vscode.Disposable {
     const candidates = [
       path.join(__dirname, "..", "backend"),
       path.join(__dirname, "..", "..", "backend"),
+      path.join(__dirname, "..", "..", "..", "backend"),
     ];
 
     for (const candidate of candidates) {
-      if (existsSync(path.join(candidate, "main.py"))) {
+      const mainPy = path.join(candidate, "main.py");
+      if (existsSync(mainPy)) {
+        this.outputChannel.appendLine(`Found backend source: ${candidate}`);
         return candidate;
       }
     }
 
+    this.outputChannel.appendLine(
+      `Backend source not found. Searched:\n${candidates.map(c => `  ${c}`).join("\n")}`
+    );
     return null;
   }
 
