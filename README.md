@@ -16,6 +16,8 @@ Works with VS Code, Cursor, Windsurf, VSCodium, and other VS Code ecosystem edit
 - **Auto Fixes** — one-click fixes for common issues (create `.env.example`, install deps, generate Dockerfile)
 - **JSON Export** — export full scan results for CI integration
 
+
+
 ## Architecture
 
 ```
