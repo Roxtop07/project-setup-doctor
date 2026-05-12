@@ -67,7 +67,6 @@ a = Analysis(
         "sqlite3",
         "dbm",
         "difflib",
-        "distutils",
         "ensurepip",
         "venv",
         "idlelib",
