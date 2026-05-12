@@ -63,7 +63,6 @@ a = Analysis(
         "_codecs_kr",
         "_codecs_tw",
         "curses",
-        "multiprocessing",
         "sqlite3",
         "dbm",
         "difflib",

@@ -1,11 +1,20 @@
 import * as vscode from "vscode";
 import { ChildProcess, spawn, execSync } from "child_process";
-import { accessSync, chmodSync, constants, existsSync } from "fs";
+import {
+  accessSync,
+  chmodSync,
+  constants,
+  existsSync,
+  readdirSync,
+  statSync,
+} from "fs";
 import * as path from "path";
+import * as net from "net";
 import { BackendClient } from "./backend-client";
 
 const MAX_RESTART_ATTEMPTS = 3;
 const RESTART_DELAY_MS = 2000;
+const STARTUP_TIMEOUT_MS = 30000;
 
 export class BackendManager implements vscode.Disposable {
   private process: ChildProcess | null = null;
@@ -16,6 +25,7 @@ export class BackendManager implements vscode.Disposable {
   private restartCount = 0;
   private restartTimer: ReturnType<typeof setTimeout> | undefined;
   private lastStderr = "";
+  private startMode: "binary" | "python" | "none" = "none";
 
   constructor(outputChannel: vscode.OutputChannel) {
     this.client = new BackendClient();
@@ -54,22 +64,39 @@ export class BackendManager implements vscode.Disposable {
       .getConfiguration("secureCode")
       .get<number>("backendPort", 18120);
 
+    const portInUse = await this.isPortInUse(port);
+    if (portInUse) {
+      throw new Error(
+        `Port ${port} is already in use by another process. ` +
+          `Change the port in Settings → SecureCode → Backend Port, or stop the process using port ${port}.`
+      );
+    }
+
     this.lastStderr = "";
+    this.startMode = "none";
+
     const binaryPath = this.findBinary();
     if (binaryPath) {
       this.outputChannel.appendLine(
         `Starting backend (binary mode) on port ${port}...`
       );
+      this.startMode = "binary";
       this.spawnBinary(binaryPath, port);
     } else {
-      this.outputChannel.appendLine(
-        "Bundled binary not found, falling back to Python..."
-      );
-      await this.spawnPython(port);
+      const backendPath = this.findBackendSource();
+      if (backendPath) {
+        this.outputChannel.appendLine(
+          "Bundled binary not found, falling back to Python..."
+        );
+        this.startMode = "python";
+        await this.spawnPython(backendPath, port);
+      } else {
+        throw new Error(this.buildNoBinaryError());
+      }
     }
 
     this.attachProcessHandlers();
-    await this.waitForReady(15000);
+    await this.waitForReady(STARTUP_TIMEOUT_MS);
     this.restartCount = 0;
   }
 
@@ -118,41 +145,86 @@ export class BackendManager implements vscode.Disposable {
     }
 
     if (platform !== "win32") {
-      try {
-        accessSync(binaryPath, constants.X_OK);
-      } catch {
-        this.outputChannel.appendLine(
-          `Binary not executable, fixing permissions: ${binaryPath}`
-        );
-        try {
-          chmodSync(binaryPath, 0o755);
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : String(e);
-          this.outputChannel.appendLine(
-            `Failed to set execute permission: ${msg}`
-          );
-          return null;
-        }
-      }
-
-      this.removeQuarantine(binaryPath);
+      this.fixPermissions(binDir);
+      this.removeQuarantine(binDir);
     }
 
     this.outputChannel.appendLine(`Found binary: ${binaryPath}`);
     return binaryPath;
   }
 
-  private removeQuarantine(binaryPath: string): void {
+  private fixPermissions(binDir: string): void {
+    try {
+      const entries = this.walkDir(binDir);
+      let fixed = 0;
+      for (const filePath of entries) {
+        try {
+          accessSync(filePath, constants.X_OK);
+        } catch {
+          try {
+            chmodSync(filePath, 0o755);
+            fixed++;
+          } catch {
+            // individual file permission fix failed, continue
+          }
+        }
+      }
+      if (fixed > 0) {
+        this.outputChannel.appendLine(
+          `Fixed execute permissions on ${fixed} file(s) in binary directory.`
+        );
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.outputChannel.appendLine(
+        `Warning: Could not fix permissions in binary directory: ${msg}`
+      );
+    }
+  }
+
+  private removeQuarantine(binDir: string): void {
     if (process.platform !== "darwin") return;
 
     try {
-      execSync(`xattr -d com.apple.quarantine "${binaryPath}" 2>/dev/null`, {
-        timeout: 5000,
-      });
-      this.outputChannel.appendLine("Removed macOS quarantine attribute.");
+      execSync(
+        `xattr -dr com.apple.quarantine "${binDir}" 2>/dev/null`,
+        { timeout: 10000 }
+      );
+      this.outputChannel.appendLine(
+        "Removed macOS quarantine attribute from binary directory."
+      );
     } catch {
       // Attribute may not exist — that's fine
     }
+  }
+
+  private walkDir(dir: string): string[] {
+    const results: string[] = [];
+    for (const entry of readdirSync(dir)) {
+      const fullPath = path.join(dir, entry);
+      const stat = statSync(fullPath);
+      if (stat.isDirectory()) {
+        results.push(...this.walkDir(fullPath));
+      } else if (stat.isFile()) {
+        results.push(fullPath);
+      }
+    }
+    return results;
+  }
+
+  private findBackendSource(): string | null {
+    const candidates = [
+      path.join(__dirname, "..", "backend"),
+      path.join(__dirname, "..", "..", "backend"),
+    ];
+
+    for (const candidate of candidates) {
+      if (existsSync(path.join(candidate, "main.py"))) {
+        return candidate;
+      }
+    }
+
+    return null;
   }
 
   private spawnBinary(binaryPath: string, port: number): void {
@@ -168,19 +240,21 @@ export class BackendManager implements vscode.Disposable {
     );
   }
 
-  private async spawnPython(port: number): Promise<void> {
-    const backendPath = path.join(__dirname, "..", "..", "backend");
-
-    if (!existsSync(path.join(backendPath, "main.py"))) {
-      throw new Error(
-        "Backend not found. Reinstall the extension or install Python 3.10+."
-      );
-    }
-
+  private async spawnPython(
+    backendPath: string,
+    port: number
+  ): Promise<void> {
     const pythonCmd = await this.findPython();
     if (!pythonCmd) {
       throw new Error(
-        "Python 3.10+ not found. Install Python and ensure it is on PATH."
+        "Python 3.10+ not found. Install Python from https://python.org and ensure it is on your PATH."
+      );
+    }
+
+    const hasDeps = await this.checkPythonDeps(pythonCmd, backendPath);
+    if (!hasDeps) {
+      throw new Error(
+        `Python dependencies missing. Run: ${pythonCmd} -m pip install -r requirements.txt (in the backend directory)`
       );
     }
 
@@ -209,6 +283,21 @@ export class BackendManager implements vscode.Disposable {
     );
   }
 
+  private async checkPythonDeps(
+    pythonCmd: string,
+    backendPath: string
+  ): Promise<boolean> {
+    try {
+      execSync(
+        `${pythonCmd} -c "import uvicorn; import fastapi; import pydantic"`,
+        { cwd: backendPath, timeout: 10000, encoding: "utf-8" }
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private attachProcessHandlers(): void {
     if (!this.process) return;
 
@@ -234,25 +323,78 @@ export class BackendManager implements vscode.Disposable {
         this.outputChannel.appendLine(
           `Backend exited (code=${code}, signal=${signal})`
         );
+        if (code !== 0 && code !== null) {
+          this.outputChannel.appendLine(this.diagnoseExitCode(code));
+        }
         this.scheduleRestart();
       }
     });
+  }
+
+  private diagnoseExitCode(code: number): string {
+    const platform = process.platform;
+
+    if (code === 126) {
+      if (platform === "darwin") {
+        return (
+          "Binary cannot execute — macOS Gatekeeper may be blocking it. " +
+          'Try: right-click the VS Code app → Open, or run "xattr -dr com.apple.quarantine" on the extension directory.'
+        );
+      }
+      return "Binary cannot execute — check file permissions (chmod +x).";
+    }
+
+    if (code === 127) {
+      return "Binary or a required shared library was not found.";
+    }
+
+    if (code === 137 || code === 9) {
+      return "Backend was killed (out of memory or system kill signal).";
+    }
+
+    if (code === 1) {
+      const stderr = this.lastStderr.toLowerCase();
+      if (stderr.includes("address already in use") || stderr.includes("eaddrinuse")) {
+        return "Port is already in use. Change it in Settings → SecureCode → Backend Port.";
+      }
+      if (stderr.includes("no module named")) {
+        return "A required Python module is missing. Try reinstalling the extension.";
+      }
+      if (platform === "darwin" && stderr.includes("killed")) {
+        return (
+          'macOS Gatekeeper blocked the binary. Try: Open System Settings → Privacy & Security, and click "Allow Anyway".'
+        );
+      }
+      if (platform === "win32" && (stderr.includes("access") || stderr.includes("virus"))) {
+        return (
+          "Windows Defender or SmartScreen may be blocking the binary. " +
+          "Open Windows Security → Virus & threat protection → Protection history, and allow the SecureCode backend."
+        );
+      }
+    }
+
+    return `Backend exited with code ${code}. Check the output above for details.`;
   }
 
   private scheduleRestart(): void {
     if (this.disposed) return;
     if (this.restartCount >= MAX_RESTART_ATTEMPTS) {
       this.outputChannel.appendLine(
-        `Backend crashed ${MAX_RESTART_ATTEMPTS} times. Not restarting — check the SecureCode output channel.`
+        `Backend crashed ${MAX_RESTART_ATTEMPTS} times. Not restarting.`
       );
+
+      const errorDetail = this.buildCrashErrorMessage();
       vscode.window
-        .showErrorMessage(
-          "SecureCode backend keeps crashing. Check output for details.",
-          "Show Output"
-        )
+        .showErrorMessage(errorDetail, "Show Output", "Troubleshoot")
         .then((action) => {
           if (action === "Show Output") {
             this.outputChannel.show();
+          } else if (action === "Troubleshoot") {
+            vscode.env.openExternal(
+              vscode.Uri.parse(
+                "https://github.com/Roxtop07/project-setup-doctor/issues"
+              )
+            );
           }
         });
       return;
@@ -275,8 +417,53 @@ export class BackendManager implements vscode.Disposable {
     }, delay);
   }
 
+  private buildCrashErrorMessage(): string {
+    const platform = process.platform;
+    const base = "SecureCode backend failed to start.";
+
+    if (this.startMode === "binary") {
+      if (platform === "darwin") {
+        return (
+          `${base} macOS may be blocking the binary — open System Settings → Privacy & Security and allow it.`
+        );
+      }
+      if (platform === "win32") {
+        return (
+          `${base} Windows Defender may be blocking it — check Windows Security → Protection history.`
+        );
+      }
+      if (platform === "linux") {
+        return (
+          `${base} Check that the binary has execute permissions and required shared libraries (ldd).`
+        );
+      }
+    }
+
+    if (this.startMode === "python") {
+      return (
+        `${base} Python backend failed — ensure Python 3.10+ is installed with uvicorn, fastapi, and pydantic.`
+      );
+    }
+
+    return `${base} Check the SecureCode output channel for details.`;
+  }
+
+  private buildNoBinaryError(): string {
+    const platform = process.platform;
+    const arch = process.arch;
+
+    return (
+      `No backend binary found for ${platform}-${arch} and no Python fallback available. ` +
+      `Install the platform-specific version of SecureCode for ${platform}-${arch}, ` +
+      `or install Python 3.10+ with dependencies (pip install uvicorn fastapi pydantic).`
+    );
+  }
+
   private async findPython(): Promise<string | null> {
-    const candidates = ["python3", "python"];
+    const candidates =
+      process.platform === "win32"
+        ? ["python", "python3", "py -3"]
+        : ["python3", "python"];
 
     for (const cmd of candidates) {
       try {
@@ -292,6 +479,9 @@ export class BackendManager implements vscode.Disposable {
             this.outputChannel.appendLine(`Found ${cmd}: ${version}`);
             return cmd;
           }
+          this.outputChannel.appendLine(
+            `Skipping ${cmd}: ${version} (need 3.10+)`
+          );
         }
       } catch {
         continue;
@@ -309,23 +499,80 @@ export class BackendManager implements vscode.Disposable {
     }
   }
 
+  private isPortInUse(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      server.once("error", () => resolve(true));
+      server.once("listening", () => {
+        server.close(() => resolve(false));
+      });
+      server.listen(port, "127.0.0.1");
+    });
+  }
+
   private async waitForReady(timeoutMs: number): Promise<void> {
     const start = Date.now();
+    let lastLog = start;
+
     while (Date.now() - start < timeoutMs) {
       if (this.disposed) return;
+
+      if (this.process?.exitCode !== null && this.process?.exitCode !== undefined) {
+        throw new Error(
+          `Backend process exited immediately with code ${this.process.exitCode}.` +
+            this.buildStartupHint()
+        );
+      }
+
       if (await this.isBackendRunning()) {
         this.ready = true;
         this.outputChannel.appendLine("Backend is ready.");
         return;
       }
+
+      const now = Date.now();
+      if (now - lastLog > 5000) {
+        const elapsed = Math.round((now - start) / 1000);
+        this.outputChannel.appendLine(
+          `Still waiting for backend... (${elapsed}s elapsed)`
+        );
+        lastLog = now;
+      }
+
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    const hint = this.lastStderr
-      ? `\nLast error: ${this.lastStderr.slice(0, 200)}`
-      : "";
     throw new Error(
-      `Backend failed to start within ${timeoutMs / 1000}s.${hint}\nCheck the SecureCode output channel for details.`
+      `Backend failed to start within ${timeoutMs / 1000}s.` +
+        this.buildStartupHint()
     );
+  }
+
+  private buildStartupHint(): string {
+    const parts: string[] = [];
+
+    if (this.lastStderr) {
+      parts.push(`\nLast error: ${this.lastStderr.slice(0, 300)}`);
+    }
+
+    const platform = process.platform;
+    if (this.startMode === "binary") {
+      if (platform === "darwin") {
+        parts.push(
+          "\nTip: macOS may be blocking the binary. Open System Settings → Privacy & Security and look for a blocked app notice."
+        );
+      } else if (platform === "win32") {
+        parts.push(
+          "\nTip: Windows Defender may be blocking the binary. Check Windows Security → Virus & threat protection → Protection history."
+        );
+      } else if (platform === "linux") {
+        parts.push(
+          "\nTip: Check binary permissions and shared library availability (run ldd on the binary)."
+        );
+      }
+    }
+
+    parts.push("\nCheck the SecureCode output channel for full details.");
+    return parts.join("");
   }
 }

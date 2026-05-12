@@ -10,9 +10,10 @@ PLATFORM="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
 
 case "$PLATFORM" in
-    darwin) PLATFORM="darwin" ;;
-    linux)  PLATFORM="linux" ;;
-    *)      echo "Unsupported platform: $PLATFORM"; exit 1 ;;
+    darwin)  PLATFORM="darwin" ;;
+    linux)   PLATFORM="linux" ;;
+    mingw*|msys*|cygwin*) PLATFORM="win32" ;;
+    *)       echo "Unsupported platform: $PLATFORM"; exit 1 ;;
 esac
 
 case "$ARCH" in
@@ -44,7 +45,10 @@ pyinstaller securecode-backend.spec --clean --noconfirm --distpath "$BACKEND_DIR
 rm -rf "$BIN_DIR"
 mkdir -p "$(dirname "$BIN_DIR")"
 mv "$BACKEND_DIR/dist/securecode-backend" "$BIN_DIR"
-chmod +x "$BIN_DIR/securecode-backend"
+
+if [ "$PLATFORM" != "win32" ]; then
+    chmod -R +x "$BIN_DIR"
+fi
 
 rm -rf "$BACKEND_DIR/build" "$BACKEND_DIR/dist"
 

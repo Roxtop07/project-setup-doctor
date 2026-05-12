@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-13
+
+### Fixed
+
+- **Backend startup failures across all platforms** — resolved "backend failed to start" errors in production
+- **macOS Gatekeeper blocking**: quarantine attribute now removed recursively from entire binary directory, not just the main executable — fixes blocked .dylib/.so files
+- **File permissions**: execute permissions now fixed recursively for all files in the binary bundle
+- **Python fallback path**: corrected path resolution for production VSIX installs where backend source may be at different relative paths
+- **Port conflict detection**: pre-checks if the configured port is already in use before attempting to start, with actionable error message
+- **Python dependency validation**: checks that uvicorn, fastapi, and pydantic are importable before spawning Python fallback
+- **Windows Python discovery**: now also tries `py -3` (Windows Python Launcher) in addition to `python3`/`python`
+- **Immediate exit detection**: if the backend process exits immediately, fails fast with diagnosis instead of waiting the full timeout
+
+### Added
+
+- **linux-arm64 distribution** — new platform support for Raspberry Pi, AWS Graviton, and other ARM64 Linux systems
+- **Universal VSIX package** — fallback package without bundled binary for unsupported platforms (uses Python)
+- **Platform-specific error diagnostics** — exit codes and stderr are analyzed to provide actionable troubleshooting:
+  - macOS: Gatekeeper/quarantine guidance with System Settings instructions
+  - Windows: Defender/SmartScreen guidance with Security settings path
+  - Linux: Permission and shared library (ldd) guidance
+- **Startup progress logging** — logs progress every 5 seconds during backend startup
+- **Troubleshoot button** — crash dialog now includes direct link to GitHub issues
+- **Increased startup timeout** — 30 seconds (was 15) to accommodate slower machines
+
+### Changed
+
+- Build matrix now produces **6 distributions**: darwin-arm64, darwin-x64, linux-x64, linux-arm64, win32-x64, universal
+- Build script now supports Windows (MSYS/MinGW/Cygwin) and applies recursive chmod
+
 ## [0.3.0] - 2026-05-12
 
 ### Added
