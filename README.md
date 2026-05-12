@@ -185,3 +185,6 @@ AnalyzerRegistry.register(MyAnalyzer())
 ## License
 
 MIT
+
+## Made with Claude Code
+Made By Manish Srivastav
