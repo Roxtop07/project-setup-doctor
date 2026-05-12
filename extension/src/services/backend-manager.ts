@@ -56,8 +56,16 @@ export class BackendManager implements vscode.Disposable {
 
   async stop(): Promise<void> {
     if (this.process) {
-      this.process.kill("SIGTERM");
+      const proc = this.process;
       this.process = null;
+      proc.kill("SIGTERM");
+      setTimeout(() => {
+        try {
+          proc.kill("SIGKILL");
+        } catch {
+          // already dead
+        }
+      }, 3000);
     }
     this.ready = false;
   }

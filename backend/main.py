@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
 from models.contracts import BackendStatus
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO").upper(),
