@@ -1,6 +1,6 @@
 [project]
 name = "securecode-backend"
-version = "0.1.0"
+version = "0.3.0"
 description = "Analysis backend for SecureCode"
 requires-python = ">=3.10"
 license = {text = "MIT"}

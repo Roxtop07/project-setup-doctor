@@ -134,5 +134,5 @@ class AutoFixResult(BaseModel):
 
 class BackendStatus(BaseModel):
     status: str = "ok"
-    version: str = "0.1.0"
+    version: str = "0.3.0"
     analyzers: list[str] = Field(default_factory=list)
