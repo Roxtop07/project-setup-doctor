@@ -2,7 +2,7 @@
   "name": "securecode",
   "displayName": "SecureCode",
   "description": "Scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "publisher": "manish-srivastav",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -173,10 +173,12 @@
   "scripts": {
     "vscode:prepublish": "npm run build",
     "build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "build:backend": "bash ../scripts/build-backend.sh",
+    "build:all": "npm run build:backend && npm run build",
     "watch": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",
-    "package": "vsce package",
+    "package": "npm run build:all && vsce package --allow-missing-repository",
     "publish:vscode": "vsce publish",
     "publish:openvsx": "ovsx publish"
   },

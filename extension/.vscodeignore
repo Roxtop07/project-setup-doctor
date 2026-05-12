@@ -4,5 +4,21 @@ src/**
 node_modules/**
 .gitignore
 tsconfig.json
+.eslintrc.json
 **/*.map
 **/*.ts
+
+# Backend build artifacts
+backend/.venv/**
+backend/__pycache__/**
+backend/.pytest_cache/**
+backend/.mypy_cache/**
+backend/tests/**
+backend/dist/**
+backend/build/**
+backend/*.spec
+
+# Build scripts
+scripts/**
+
+# Keep bin/ (bundled binary) and backend/ (Python fallback)
