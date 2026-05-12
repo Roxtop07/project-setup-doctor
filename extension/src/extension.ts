@@ -79,6 +79,17 @@ function registerFileWatcher(
     "**/Dockerfile",
     "**/docker-compose*.yml",
     "**/README.md",
+    "**/*.epl",
+    "**/{go.mod,go.sum}",
+    "**/{Cargo.toml,Cargo.lock}",
+    "**/{pom.xml,build.gradle,build.gradle.kts}",
+    "**/{Gemfile,Gemfile.lock}",
+    "**/{composer.json,composer.lock}",
+    "**/*.csproj",
+    "**/Package.swift",
+    "**/pubspec.yaml",
+    "**/mix.exs",
+    "**/CMakeLists.txt",
   ];
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;

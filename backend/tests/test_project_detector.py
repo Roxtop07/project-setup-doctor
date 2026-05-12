@@ -62,6 +62,13 @@ class TestProjectDetector:
         info = ProjectDetector(node_project).detect()
         assert info.name == "node_project"
 
+    def test_detect_epl(self, epl_project: str):
+        info = ProjectDetector(epl_project).detect()
+        assert ProjectType.EPL in info.types
+        assert info.has_epl_files is True
+        assert info.has_requirements_txt is True
+        assert "EPL" in info.detected_frameworks
+
     def test_runtime_versions_populated(self, node_project: str):
         info = ProjectDetector(node_project).detect()
         assert "node" in info.runtime_versions

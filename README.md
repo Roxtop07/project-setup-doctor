@@ -43,7 +43,7 @@ Every developer has wasted hours on:
 
 | Feature | What it does |
 |---------|-------------|
-| **Project Detection** | Auto-detects Next.js, React, Node.js, Express, FastAPI, Flask, Django, Python, Docker |
+| **Project Detection** | Auto-detects 25+ project types: Node.js, Python, Go, Rust, Java, Kotlin, Ruby, PHP, C#, Swift, Dart, Elixir, C/C++, and more |
 | **Environment Validator** | Missing `.env` vars, malformed values, missing runtimes (Node, Python, Docker) |
 | **Dependency Scanner** | Duplicates, unpinned versions, missing lockfiles, missing `node_modules` (npm + pip) |
 | **Security Scanner** | Hardcoded API keys, tokens, passwords in source code; missing `.gitignore` entries |
@@ -103,6 +103,23 @@ Health Score: 62/100 (C)
 | **Flask** | `flask` in requirements.txt / pyproject.toml |
 | **Django** | `django` in requirements.txt / pyproject.toml |
 | **Python** | requirements.txt / pyproject.toml present |
+| **EPL** | `.epl` files or `eplang` in dependencies |
+| **Go** | go.mod present |
+| **Rust** | Cargo.toml present |
+| **Java** | pom.xml or build.gradle present |
+| **Kotlin** | `kotlin` in build.gradle.kts / build.gradle |
+| **Scala** | `scala` in build configuration |
+| **Ruby** | Gemfile present |
+| **PHP** | composer.json present |
+| **C# / .NET** | *.csproj or *.sln present |
+| **Swift** | Package.swift present |
+| **Dart / Flutter** | pubspec.yaml present |
+| **Elixir** | mix.exs present |
+| **C / C++** | CMakeLists.txt, Makefile, or source files present |
+| **Haskell** | *.cabal or stack.yaml present |
+| **Clojure** | project.clj or deps.edn present |
+| **Perl** | cpanfile or Makefile.PL present |
+| **Lua** | *.rockspec present |
 | **Docker** | Dockerfile present |
 
 ---

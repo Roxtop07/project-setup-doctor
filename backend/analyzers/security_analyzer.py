@@ -23,7 +23,37 @@ DANGEROUS_SCRIPT_PATTERNS = [
     re.compile(r"wget\s+.*\|\s*sh"),
 ]
 
-SCAN_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx", ".py", ".yml", ".yaml", ".json"}
+SCAN_EXTENSIONS = {
+    ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
+    ".py", ".pyw",
+    ".epl",
+    ".rb", ".erb",
+    ".java", ".kt", ".kts", ".scala", ".groovy", ".gradle",
+    ".go",
+    ".rs",
+    ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp",
+    ".cs",
+    ".swift",
+    ".php",
+    ".r", ".R",
+    ".pl", ".pm",
+    ".lua",
+    ".dart",
+    ".ex", ".exs",
+    ".hs",
+    ".clj", ".cljs",
+    ".sh", ".bash", ".zsh",
+    ".ps1", ".psm1",
+    ".tf", ".hcl",
+    ".yml", ".yaml",
+    ".toml",
+    ".json",
+    ".xml",
+    ".cfg", ".ini", ".conf",
+    ".html", ".htm",
+    ".vue", ".svelte",
+    ".sql",
+}
 SCAN_DOTFILES = {".env", ".env.local", ".env.production", ".env.development", ".env.staging"}
 
 
@@ -46,14 +76,46 @@ class SecurityAnalyzer(BaseAnalyzer):
         gitignore_path = os.path.join(root_path, ".gitignore")
 
         if not os.path.isfile(gitignore_path):
-            if project_info.has_env_file or project_info.has_package_json:
-                entries: list[str] = []
+            has_any_project = (
+                project_info.has_env_file
+                or project_info.has_package_json
+                or project_info.has_requirements_txt
+                or project_info.has_pyproject_toml
+                or project_info.has_go_mod
+                or project_info.has_cargo_toml
+                or project_info.has_pom_xml
+                or project_info.has_build_gradle
+                or project_info.has_gemfile
+                or project_info.has_composer_json
+                or project_info.has_csproj
+                or project_info.has_pubspec_yaml
+                or project_info.has_mix_exs
+                or project_info.has_cmakelists
+            )
+            if has_any_project:
+                entries: list[str] = [".env"]
                 if project_info.has_package_json:
-                    entries.extend(["node_modules/", "dist/", ".env"])
+                    entries.extend(["node_modules/", "dist/"])
                 if project_info.has_requirements_txt or project_info.has_pyproject_toml:
-                    entries.extend(["__pycache__/", ".venv/", "*.pyc", ".env"])
-                if not entries:
-                    entries.append(".env")
+                    entries.extend(["__pycache__/", ".venv/", "*.pyc"])
+                if project_info.has_go_mod:
+                    entries.append("bin/")
+                if project_info.has_cargo_toml:
+                    entries.append("target/")
+                if project_info.has_pom_xml or project_info.has_build_gradle:
+                    entries.extend(["build/", ".gradle/", "target/", "*.class"])
+                if project_info.has_gemfile:
+                    entries.append("vendor/bundle/")
+                if project_info.has_composer_json:
+                    entries.append("vendor/")
+                if project_info.has_csproj:
+                    entries.extend(["bin/", "obj/"])
+                if project_info.has_pubspec_yaml:
+                    entries.extend([".dart_tool/", "build/"])
+                if project_info.has_mix_exs:
+                    entries.extend(["_build/", "deps/"])
+                if project_info.has_cmakelists:
+                    entries.extend(["build/", "*.o", "*.so"])
 
                 issues.append(
                     Issue(

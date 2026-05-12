@@ -9,6 +9,24 @@ export type ProjectType =
   | "flask"
   | "django"
   | "python"
+  | "epl"
+  | "go"
+  | "rust"
+  | "java"
+  | "kotlin"
+  | "scala"
+  | "ruby"
+  | "php"
+  | "csharp"
+  | "swift"
+  | "dart"
+  | "elixir"
+  | "c"
+  | "cpp"
+  | "perl"
+  | "lua"
+  | "haskell"
+  | "clojure"
   | "docker"
   | "unknown";
 
@@ -25,6 +43,22 @@ export interface ProjectInfo {
   has_env_example: boolean;
   has_readme: boolean;
   has_gitignore: boolean;
+  has_epl_files: boolean;
+  has_go_mod: boolean;
+  has_cargo_toml: boolean;
+  has_pom_xml: boolean;
+  has_build_gradle: boolean;
+  has_gemfile: boolean;
+  has_composer_json: boolean;
+  has_csproj: boolean;
+  has_sln: boolean;
+  has_package_swift: boolean;
+  has_pubspec_yaml: boolean;
+  has_mix_exs: boolean;
+  has_makefile: boolean;
+  has_cmakelists: boolean;
+  has_cabal: boolean;
+  has_stack_yaml: boolean;
   detected_frameworks: string[];
   runtime_versions: Record<string, string | null>;
 }

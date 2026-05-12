@@ -38,5 +38,45 @@ def empty_project() -> str:
 
 
 @pytest.fixture
+def epl_project() -> str:
+    return str(FIXTURES_DIR / "epl_project")
+
+
+@pytest.fixture
+def go_project() -> str:
+    return str(FIXTURES_DIR / "go_project")
+
+
+@pytest.fixture
+def rust_project() -> str:
+    return str(FIXTURES_DIR / "rust_project")
+
+
+@pytest.fixture
+def java_project() -> str:
+    return str(FIXTURES_DIR / "java_project")
+
+
+@pytest.fixture
+def ruby_project() -> str:
+    return str(FIXTURES_DIR / "ruby_project")
+
+
+@pytest.fixture
+def php_project() -> str:
+    return str(FIXTURES_DIR / "php_project")
+
+
+@pytest.fixture
+def csharp_project() -> str:
+    return str(FIXTURES_DIR / "csharp_project")
+
+
+@pytest.fixture
+def dart_project() -> str:
+    return str(FIXTURES_DIR / "dart_project")
+
+
+@pytest.fixture
 def broken_project() -> str:
     return str(FIXTURES_DIR / "broken_project")

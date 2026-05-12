@@ -29,6 +29,17 @@ def _register_defaults() -> None:
     from analyzers.readme_analyzer import ReadmeAnalyzer
     from analyzers.security_analyzer import SecurityAnalyzer
     from analyzers.docker_analyzer import DockerAnalyzer
+    from analyzers.epl_analyzer import EplAnalyzer
+    from analyzers.go_analyzer import GoAnalyzer
+    from analyzers.rust_analyzer import RustAnalyzer
+    from analyzers.jvm_analyzer import JvmAnalyzer
+    from analyzers.ruby_analyzer import RubyAnalyzer
+    from analyzers.php_analyzer import PhpAnalyzer
+    from analyzers.csharp_analyzer import CsharpAnalyzer
+    from analyzers.swift_analyzer import SwiftAnalyzer
+    from analyzers.dart_analyzer import DartAnalyzer
+    from analyzers.elixir_analyzer import ElixirAnalyzer
+    from analyzers.c_cpp_analyzer import CCppAnalyzer
 
     for cls in [
         EnvAnalyzer,
@@ -36,6 +47,17 @@ def _register_defaults() -> None:
         ReadmeAnalyzer,
         SecurityAnalyzer,
         DockerAnalyzer,
+        EplAnalyzer,
+        GoAnalyzer,
+        RustAnalyzer,
+        JvmAnalyzer,
+        RubyAnalyzer,
+        PhpAnalyzer,
+        CsharpAnalyzer,
+        SwiftAnalyzer,
+        DartAnalyzer,
+        ElixirAnalyzer,
+        CCppAnalyzer,
     ]:
         AnalyzerRegistry.register(cls())
 

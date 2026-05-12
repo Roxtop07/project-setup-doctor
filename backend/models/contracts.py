@@ -21,6 +21,24 @@ class ProjectType(str, Enum):
     FLASK = "flask"
     DJANGO = "django"
     PYTHON = "python"
+    EPL = "epl"
+    GO = "go"
+    RUST = "rust"
+    JAVA = "java"
+    KOTLIN = "kotlin"
+    SCALA = "scala"
+    RUBY = "ruby"
+    PHP = "php"
+    CSHARP = "csharp"
+    SWIFT = "swift"
+    DART = "dart"
+    ELIXIR = "elixir"
+    C = "c"
+    CPP = "cpp"
+    PERL = "perl"
+    LUA = "lua"
+    HASKELL = "haskell"
+    CLOJURE = "clojure"
     DOCKER = "docker"
     UNKNOWN = "unknown"
 
@@ -38,6 +56,22 @@ class ProjectInfo(BaseModel):
     has_env_example: bool = False
     has_readme: bool = False
     has_gitignore: bool = False
+    has_epl_files: bool = False
+    has_go_mod: bool = False
+    has_cargo_toml: bool = False
+    has_pom_xml: bool = False
+    has_build_gradle: bool = False
+    has_gemfile: bool = False
+    has_composer_json: bool = False
+    has_csproj: bool = False
+    has_sln: bool = False
+    has_package_swift: bool = False
+    has_pubspec_yaml: bool = False
+    has_mix_exs: bool = False
+    has_makefile: bool = False
+    has_cmakelists: bool = False
+    has_cabal: bool = False
+    has_stack_yaml: bool = False
     detected_frameworks: list[str] = Field(default_factory=list)
     runtime_versions: dict[str, Optional[str]] = Field(default_factory=dict)
 
