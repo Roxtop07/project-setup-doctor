@@ -9,7 +9,7 @@ export class StatusBarProvider implements vscode.Disposable {
       vscode.StatusBarAlignment.Left,
       50
     );
-    this.item.command = "projectSetupDoctor.showHealthReport";
+    this.item.command = "secureCode.showHealthReport";
     this.item.tooltip = "SecureCode - Click to view health report";
     this.setIdle();
     this.item.show();
