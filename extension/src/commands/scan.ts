@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { BackendClient } from "../services/backend-client";
+import type { BackendManager } from "../services/backend-manager";
 import type { ScanCache } from "../services/scan-cache";
 import type { DiagnosticsProvider } from "../providers/diagnostics-provider";
 import type { StatusBarProvider } from "../providers/status-bar-provider";
@@ -9,6 +10,7 @@ import type { ScanResult } from "../types";
 export function registerScanCommand(
   context: vscode.ExtensionContext,
   client: BackendClient,
+  backendManager: BackendManager,
   cache: ScanCache,
   diagnostics: DiagnosticsProvider,
   statusBar: StatusBarProvider,
@@ -21,6 +23,18 @@ export function registerScanCommand(
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) {
           vscode.window.showWarningMessage("No workspace folder open.");
+          return;
+        }
+
+        try {
+          await backendManager.ensureReady();
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          vscode.window.showErrorMessage(
+            `SecureCode backend is not available: ${msg}`
+          );
+          statusBar.setError("Backend offline");
+          sidebar.setError("Backend is not available. Try reloading the window.");
           return;
         }
 

@@ -5,10 +5,14 @@ export class BackendClient {
   private baseUrl: string;
 
   constructor() {
+    this.baseUrl = this.buildBaseUrl();
+  }
+
+  private buildBaseUrl(): string {
     const port = vscode.workspace
       .getConfiguration("secureCode")
       .get<number>("backendPort", 18120);
-    this.baseUrl = `http://127.0.0.1:${port}`;
+    return `http://127.0.0.1:${port}`;
   }
 
   async checkHealth(): Promise<BackendStatus> {
@@ -47,27 +51,61 @@ export class BackendClient {
   private async request<T>(
     method: string,
     path: string,
-    body?: unknown
+    body?: unknown,
+    retries = 2
   ): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    let lastError: Error | undefined;
 
-    try {
-      const resp = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined,
-        signal: controller.signal,
-      });
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
 
-      if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(`Backend returned ${resp.status}: ${text}`);
+      try {
+        const resp = await fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Backend returned ${resp.status}: ${text}`);
+        }
+
+        return (await resp.json()) as T;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+
+        if (lastError.name === "AbortError") {
+          throw new Error(
+            "Request timed out. The backend may be overloaded or unresponsive."
+          );
+        }
+
+        const isConnectionError =
+          lastError.message === "fetch failed" ||
+          lastError.message.includes("ECONNREFUSED") ||
+          lastError.message.includes("ECONNRESET") ||
+          lastError.cause !== undefined;
+
+        if (isConnectionError && attempt < retries) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+
+        if (isConnectionError) {
+          throw new Error(
+            "Cannot connect to the SecureCode backend. It may still be starting — try again in a few seconds, or check the SecureCode output channel for errors."
+          );
+        }
+
+        throw lastError;
+      } finally {
+        clearTimeout(timeout);
       }
-
-      return (await resp.json()) as T;
-    } finally {
-      clearTimeout(timeout);
     }
+
+    throw lastError ?? new Error("Request failed");
   }
 }

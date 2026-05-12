@@ -1,10 +1,12 @@
 import * as vscode from "vscode";
 import type { BackendClient } from "../services/backend-client";
+import type { BackendManager } from "../services/backend-manager";
 import type { ScanCache } from "../services/scan-cache";
 
 export function registerAutoFixCommand(
   context: vscode.ExtensionContext,
   client: BackendClient,
+  backendManager: BackendManager,
   cache: ScanCache
 ): void {
   context.subscriptions.push(
@@ -13,6 +15,15 @@ export function registerAutoFixCommand(
       async (fixIds?: string[]) => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) return;
+
+        try {
+          await backendManager.ensureReady();
+        } catch {
+          vscode.window.showErrorMessage(
+            "SecureCode backend is not available. Try reloading the window."
+          );
+          return;
+        }
 
         const rootPath = folders[0].uri.fsPath;
         const cached = cache.get(rootPath);

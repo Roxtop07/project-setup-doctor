@@ -38,8 +38,8 @@ export async function activate(
 
   const client = backendManager.getClient();
 
-  registerScanCommand(context, client, cache, diagnostics, statusBar, sidebar);
-  registerAutoFixCommand(context, client, cache);
+  registerScanCommand(context, client, backendManager, cache, diagnostics, statusBar, sidebar);
+  registerAutoFixCommand(context, client, backendManager, cache);
   registerHealthReportCommand(context, cache);
   registerGenerateEnvCommand(context);
   registerExportReportCommand(context, cache);

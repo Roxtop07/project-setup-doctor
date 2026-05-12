@@ -4,12 +4,17 @@ import { accessSync, constants, existsSync } from "fs";
 import * as path from "path";
 import { BackendClient } from "./backend-client";
 
+const MAX_RESTART_ATTEMPTS = 3;
+const RESTART_DELAY_MS = 2000;
+
 export class BackendManager implements vscode.Disposable {
   private process: ChildProcess | null = null;
   private client: BackendClient;
   private outputChannel: vscode.OutputChannel;
   private ready = false;
   private disposed = false;
+  private restartCount = 0;
+  private restartTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(outputChannel: vscode.OutputChannel) {
     this.client = new BackendClient();
@@ -22,6 +27,17 @@ export class BackendManager implements vscode.Disposable {
 
   getClient(): BackendClient {
     return this.client;
+  }
+
+  async ensureReady(): Promise<void> {
+    if (this.ready) return;
+
+    if (await this.isBackendRunning()) {
+      this.ready = true;
+      return;
+    }
+
+    await this.start();
   }
 
   async start(): Promise<void> {
@@ -52,9 +68,14 @@ export class BackendManager implements vscode.Disposable {
 
     this.attachProcessHandlers();
     await this.waitForReady(15000);
+    this.restartCount = 0;
   }
 
   async stop(): Promise<void> {
+    if (this.restartTimer) {
+      clearTimeout(this.restartTimer);
+      this.restartTimer = undefined;
+    }
     if (this.process) {
       const proc = this.process;
       this.process = null;
@@ -115,7 +136,7 @@ export class BackendManager implements vscode.Disposable {
   }
 
   private async spawnPython(port: number): Promise<void> {
-    const backendPath = path.join(__dirname, "..", "..", "..", "backend");
+    const backendPath = path.join(__dirname, "..", "..", "backend");
 
     if (!existsSync(path.join(backendPath, "main.py"))) {
       throw new Error(
@@ -169,6 +190,7 @@ export class BackendManager implements vscode.Disposable {
     this.process.on("error", (err) => {
       this.ready = false;
       this.outputChannel.appendLine(`Backend process error: ${err.message}`);
+      this.scheduleRestart();
     });
 
     this.process.on("exit", (code, signal) => {
@@ -177,8 +199,45 @@ export class BackendManager implements vscode.Disposable {
         this.outputChannel.appendLine(
           `Backend exited (code=${code}, signal=${signal})`
         );
+        this.scheduleRestart();
       }
     });
+  }
+
+  private scheduleRestart(): void {
+    if (this.disposed) return;
+    if (this.restartCount >= MAX_RESTART_ATTEMPTS) {
+      this.outputChannel.appendLine(
+        `Backend crashed ${MAX_RESTART_ATTEMPTS} times. Not restarting — check the SecureCode output channel.`
+      );
+      vscode.window
+        .showErrorMessage(
+          "SecureCode backend keeps crashing. Check output for details.",
+          "Show Output"
+        )
+        .then((action) => {
+          if (action === "Show Output") {
+            this.outputChannel.show();
+          }
+        });
+      return;
+    }
+
+    this.restartCount++;
+    const delay = RESTART_DELAY_MS * this.restartCount;
+    this.outputChannel.appendLine(
+      `Restarting backend in ${delay}ms (attempt ${this.restartCount}/${MAX_RESTART_ATTEMPTS})...`
+    );
+
+    this.restartTimer = setTimeout(async () => {
+      try {
+        await this.start();
+        this.outputChannel.appendLine("Backend restarted successfully.");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        this.outputChannel.appendLine(`Backend restart failed: ${msg}`);
+      }
+    }, delay);
   }
 
   private async findPython(): Promise<string | null> {

@@ -26,11 +26,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:*",
-        "http://localhost:*",
-        "vscode-webview://*",
-    ],
+    allow_origin_regex=r"^https?://(127\.0\.0\.1|localhost)(:\d+)?$|^vscode-webview://.*$",
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
