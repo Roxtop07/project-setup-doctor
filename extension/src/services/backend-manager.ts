@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { ChildProcess, spawn } from "child_process";
-import { accessSync, constants, existsSync } from "fs";
+import { ChildProcess, spawn, execSync } from "child_process";
+import { accessSync, chmodSync, constants, existsSync } from "fs";
 import * as path from "path";
 import { BackendClient } from "./backend-client";
 
@@ -15,6 +15,7 @@ export class BackendManager implements vscode.Disposable {
   private disposed = false;
   private restartCount = 0;
   private restartTimer: ReturnType<typeof setTimeout> | undefined;
+  private lastStderr = "";
 
   constructor(outputChannel: vscode.OutputChannel) {
     this.client = new BackendClient();
@@ -53,6 +54,7 @@ export class BackendManager implements vscode.Disposable {
       .getConfiguration("secureCode")
       .get<number>("backendPort", 18120);
 
+    this.lastStderr = "";
     const binaryPath = this.findBinary();
     if (binaryPath) {
       this.outputChannel.appendLine(
@@ -110,25 +112,56 @@ export class BackendManager implements vscode.Disposable {
     );
     const binaryPath = path.join(binDir, binaryName);
 
-    if (!existsSync(binaryPath)) return null;
+    if (!existsSync(binaryPath)) {
+      this.outputChannel.appendLine(`Binary not found at: ${binaryPath}`);
+      return null;
+    }
 
     if (platform !== "win32") {
       try {
         accessSync(binaryPath, constants.X_OK);
       } catch {
-        return null;
+        this.outputChannel.appendLine(
+          `Binary not executable, fixing permissions: ${binaryPath}`
+        );
+        try {
+          chmodSync(binaryPath, 0o755);
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          this.outputChannel.appendLine(
+            `Failed to set execute permission: ${msg}`
+          );
+          return null;
+        }
       }
+
+      this.removeQuarantine(binaryPath);
     }
 
     this.outputChannel.appendLine(`Found binary: ${binaryPath}`);
     return binaryPath;
   }
 
+  private removeQuarantine(binaryPath: string): void {
+    if (process.platform !== "darwin") return;
+
+    try {
+      execSync(`xattr -d com.apple.quarantine "${binaryPath}" 2>/dev/null`, {
+        timeout: 5000,
+      });
+      this.outputChannel.appendLine("Removed macOS quarantine attribute.");
+    } catch {
+      // Attribute may not exist — that's fine
+    }
+  }
+
   private spawnBinary(binaryPath: string, port: number): void {
+    const binDir = path.dirname(binaryPath);
     this.process = spawn(
       binaryPath,
       ["--host", "127.0.0.1", "--port", String(port)],
       {
+        cwd: binDir,
         env: { ...process.env },
         stdio: ["pipe", "pipe", "pipe"],
       }
@@ -184,7 +217,9 @@ export class BackendManager implements vscode.Disposable {
     });
 
     this.process.stderr?.on("data", (data: Buffer) => {
-      this.outputChannel.appendLine(data.toString().trim());
+      const text = data.toString().trim();
+      this.lastStderr = text;
+      this.outputChannel.appendLine(text);
     });
 
     this.process.on("error", (err) => {
@@ -242,7 +277,6 @@ export class BackendManager implements vscode.Disposable {
 
   private async findPython(): Promise<string | null> {
     const candidates = ["python3", "python"];
-    const { execSync } = await import("child_process");
 
     for (const cmd of candidates) {
       try {
@@ -286,8 +320,12 @@ export class BackendManager implements vscode.Disposable {
       }
       await new Promise((r) => setTimeout(r, 500));
     }
+
+    const hint = this.lastStderr
+      ? `\nLast error: ${this.lastStderr.slice(0, 200)}`
+      : "";
     throw new Error(
-      "Backend failed to start within 15s. Check the SecureCode output channel."
+      `Backend failed to start within ${timeoutMs / 1000}s.${hint}\nCheck the SecureCode output channel for details.`
     );
   }
 }
