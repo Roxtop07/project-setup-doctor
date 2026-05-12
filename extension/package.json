@@ -1,0 +1,194 @@
+{
+  "name": "project-setup-doctor",
+  "displayName": "Project Setup Doctor",
+  "description": "Scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.",
+  "version": "0.1.0",
+  "publisher": "project-setup-doctor",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/project-setup-doctor/project-setup-doctor"
+  },
+  "bugs": {
+    "url": "https://github.com/project-setup-doctor/project-setup-doctor/issues"
+  },
+  "homepage": "https://github.com/project-setup-doctor/project-setup-doctor#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "setup",
+    "doctor",
+    "health",
+    "environment",
+    "dependencies",
+    "configuration",
+    "project",
+    "lint"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/package.json",
+    "workspaceContains:**/requirements.txt",
+    "workspaceContains:**/pyproject.toml",
+    "workspaceContains:**/Dockerfile"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "projectSetupDoctor.scanProject",
+        "title": "Scan Project",
+        "category": "Setup Doctor",
+        "icon": "$(search)"
+      },
+      {
+        "command": "projectSetupDoctor.showHealthReport",
+        "title": "Show Health Report",
+        "category": "Setup Doctor",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "projectSetupDoctor.runAutoFixes",
+        "title": "Run Auto Fixes",
+        "category": "Setup Doctor",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "projectSetupDoctor.generateEnvTemplate",
+        "title": "Generate Env Template",
+        "category": "Setup Doctor",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "projectSetupDoctor.exportReport",
+        "title": "Export JSON Report",
+        "category": "Setup Doctor",
+        "icon": "$(export)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "projectSetupDoctor",
+          "title": "Setup Doctor",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "projectSetupDoctor": [
+        {
+          "type": "webview",
+          "id": "projectSetupDoctor.sidebar",
+          "name": "Health Dashboard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Project Setup Doctor",
+      "properties": {
+        "projectSetupDoctor.backendPort": {
+          "type": "number",
+          "default": 18120,
+          "description": "Port for the analysis backend server.",
+          "minimum": 1024,
+          "maximum": 65535
+        },
+        "projectSetupDoctor.autoScanOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically scan project when workspace is opened."
+        },
+        "projectSetupDoctor.scanDebounceMs": {
+          "type": "number",
+          "default": 2000,
+          "description": "Debounce interval for file change re-scans (ms).",
+          "minimum": 500,
+          "maximum": 30000
+        },
+        "projectSetupDoctor.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable anonymous usage telemetry (disabled by default)."
+        },
+        "projectSetupDoctor.enableAI": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable AI-powered analysis (requires OpenAI-compatible API key)."
+        },
+        "projectSetupDoctor.aiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for AI analysis (OpenAI-compatible).",
+          "isPassword": true
+        },
+        "projectSetupDoctor.aiBaseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "Base URL for OpenAI-compatible API."
+        },
+        "projectSetupDoctor.excludePaths": {
+          "type": "array",
+          "default": [
+            "node_modules",
+            ".git",
+            "__pycache__",
+            ".venv",
+            "venv",
+            "dist",
+            "build"
+          ],
+          "description": "Paths to exclude from scanning.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "projectSetupDoctor.scanProject"
+        },
+        {
+          "command": "projectSetupDoctor.showHealthReport"
+        },
+        {
+          "command": "projectSetupDoctor.runAutoFixes"
+        },
+        {
+          "command": "projectSetupDoctor.generateEnvTemplate"
+        },
+        {
+          "command": "projectSetupDoctor.exportReport"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "watch": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "lint": "eslint src --ext ts",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package",
+    "publish:vscode": "vsce publish",
+    "publish:openvsx": "ovsx publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0",
+    "ovsx": "^0.8.0"
+  }
+}

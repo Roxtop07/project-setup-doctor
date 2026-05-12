@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/extension"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/extension/dist/**/*.js"
+      ],
+      "preLaunchTask": "npm: watch - extension"
+    },
+    {
+      "name": "Run Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "main:app",
+        "--host", "127.0.0.1",
+        "--port", "18120",
+        "--reload"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "ENABLE_DOCS": "1"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Run Backend", "Run Extension"]
+    }
+  ]
+}
