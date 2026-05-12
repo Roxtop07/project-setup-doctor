@@ -7,7 +7,7 @@ export function registerGenerateEnvCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "projectSetupDoctor.generateEnvTemplate",
+      "secureCode.generateEnvTemplate",
       async () => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) return;

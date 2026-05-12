@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="Project Setup Doctor",
+    title="SecureCode",
     version=VERSION,
     docs_url="/docs" if os.environ.get("ENABLE_DOCS") else None,
     redoc_url=None,

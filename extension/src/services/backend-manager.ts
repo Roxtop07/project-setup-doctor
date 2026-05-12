@@ -34,7 +34,7 @@ export class BackendManager implements vscode.Disposable {
     }
 
     const port = vscode.workspace
-      .getConfiguration("projectSetupDoctor")
+      .getConfiguration("secureCode")
       .get<number>("backendPort", 18120);
 
     const backendPath = path.join(__dirname, "..", "..", "..", "backend");
@@ -161,7 +161,7 @@ export class BackendManager implements vscode.Disposable {
       await new Promise((r) => setTimeout(r, 500));
     }
     throw new Error(
-      "Backend failed to start within 15s. Check the Setup Doctor output channel."
+      "Backend failed to start within 15s. Check the SecureCode output channel."
     );
   }
 }

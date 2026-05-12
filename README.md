@@ -1,4 +1,4 @@
-# Project Setup Doctor
+# SecureCode
 
 A cross-IDE extension that scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.
 
@@ -19,7 +19,7 @@ Works with VS Code, Cursor, Windsurf, VSCodium, and other VS Code ecosystem edit
 ## Architecture
 
 ```
-project-setup-doctor/
+securecode/
 ├── extension/          # VS Code extension (TypeScript)
 │   ├── src/
 │   │   ├── commands/   # Scan, AutoFix, HealthReport, GenerateEnv, Export
@@ -84,29 +84,29 @@ Then press **F5** in VS Code to launch the Extension Development Host.
 
 1. Open a project in VS Code
 2. The extension auto-scans on workspace open (configurable)
-3. Use the **Setup Doctor** icon in the Activity Bar to view the sidebar
-4. Run commands from the Command Palette: `Setup Doctor: Scan Project`
+3. Use the **SecureCode** icon in the Activity Bar to view the sidebar
+4. Run commands from the Command Palette: `SecureCode: Scan Project`
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `Setup Doctor: Scan Project` | Full project analysis |
-| `Setup Doctor: Show Health Report` | Open detailed health report |
-| `Setup Doctor: Run Auto Fixes` | Apply available auto-fixes |
-| `Setup Doctor: Generate Env Template` | Create `.env.example` from code |
-| `Setup Doctor: Export JSON Report` | Save scan results as JSON |
+| `SecureCode: Scan Project` | Full project analysis |
+| `SecureCode: Show Health Report` | Open detailed health report |
+| `SecureCode: Run Auto Fixes` | Apply available auto-fixes |
+| `SecureCode: Generate Env Template` | Create `.env.example` from code |
+| `SecureCode: Export JSON Report` | Save scan results as JSON |
 
 ## Configuration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `projectSetupDoctor.backendPort` | `18120` | Backend server port |
-| `projectSetupDoctor.autoScanOnOpen` | `true` | Auto-scan on workspace open |
-| `projectSetupDoctor.scanDebounceMs` | `2000` | Debounce for file-change re-scans |
-| `projectSetupDoctor.enableTelemetry` | `false` | Anonymous telemetry (off by default) |
-| `projectSetupDoctor.enableAI` | `false` | AI analysis (disabled by default) |
-| `projectSetupDoctor.excludePaths` | `[...]` | Paths excluded from scanning |
+| `secureCode.backendPort` | `18120` | Backend server port |
+| `secureCode.autoScanOnOpen` | `true` | Auto-scan on workspace open |
+| `secureCode.scanDebounceMs` | `2000` | Debounce for file-change re-scans |
+| `secureCode.enableTelemetry` | `false` | Anonymous telemetry (off by default) |
+| `secureCode.enableAI` | `false` | AI analysis (disabled by default) |
+| `secureCode.excludePaths` | `[...]` | Paths excluded from scanning |
 
 ## API Endpoints
 

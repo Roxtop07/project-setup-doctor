@@ -9,7 +9,7 @@ export function registerExportReportCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "projectSetupDoctor.exportReport",
+      "secureCode.exportReport",
       async () => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) return;
@@ -22,7 +22,7 @@ export function registerExportReportCommand(
 
         const uri = await vscode.window.showSaveDialog({
           defaultUri: vscode.Uri.file(
-            path.join(folders[0].uri.fsPath, "setup-doctor-report.json")
+            path.join(folders[0].uri.fsPath, "securecode-report.json")
           ),
           filters: { JSON: ["json"] },
         });

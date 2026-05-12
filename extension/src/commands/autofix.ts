@@ -9,7 +9,7 @@ export function registerAutoFixCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "projectSetupDoctor.runAutoFixes",
+      "secureCode.runAutoFixes",
       async (fixIds?: string[]) => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) return;
@@ -61,7 +61,7 @@ export function registerAutoFixCommand(
             );
           }
 
-          vscode.commands.executeCommand("projectSetupDoctor.scanProject");
+          vscode.commands.executeCommand("secureCode.scanProject");
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : "Unknown error";
           vscode.window.showErrorMessage(`Auto-fix failed: ${msg}`);

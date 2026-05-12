@@ -1,19 +1,19 @@
 {
-  "name": "project-setup-doctor",
-  "displayName": "Project Setup Doctor",
+  "name": "securecode",
+  "displayName": "SecureCode",
   "description": "Scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.",
   "version": "0.1.0",
-  "publisher": "project-setup-doctor",
+  "publisher": "manish-srivastav",
   "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/project-setup-doctor/project-setup-doctor"
+    "url": "https://github.com/Roxtop07/project-setup-doctor"
   },
   "bugs": {
-    "url": "https://github.com/project-setup-doctor/project-setup-doctor/issues"
+    "url": "https://github.com/Roxtop07/project-setup-doctor/issues"
   },
-  "homepage": "https://github.com/project-setup-doctor/project-setup-doctor#readme",
+  "homepage": "https://github.com/Roxtop07/project-setup-doctor#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -22,8 +22,8 @@
     "Other"
   ],
   "keywords": [
-    "setup",
-    "doctor",
+    "securecode",
+    "security",
     "health",
     "environment",
     "dependencies",
@@ -41,98 +41,98 @@
   "contributes": {
     "commands": [
       {
-        "command": "projectSetupDoctor.scanProject",
+        "command": "secureCode.scanProject",
         "title": "Scan Project",
-        "category": "Setup Doctor",
+        "category": "SecureCode",
         "icon": "$(search)"
       },
       {
-        "command": "projectSetupDoctor.showHealthReport",
+        "command": "secureCode.showHealthReport",
         "title": "Show Health Report",
-        "category": "Setup Doctor",
+        "category": "SecureCode",
         "icon": "$(pulse)"
       },
       {
-        "command": "projectSetupDoctor.runAutoFixes",
+        "command": "secureCode.runAutoFixes",
         "title": "Run Auto Fixes",
-        "category": "Setup Doctor",
+        "category": "SecureCode",
         "icon": "$(wand)"
       },
       {
-        "command": "projectSetupDoctor.generateEnvTemplate",
+        "command": "secureCode.generateEnvTemplate",
         "title": "Generate Env Template",
-        "category": "Setup Doctor",
+        "category": "SecureCode",
         "icon": "$(file-add)"
       },
       {
-        "command": "projectSetupDoctor.exportReport",
+        "command": "secureCode.exportReport",
         "title": "Export JSON Report",
-        "category": "Setup Doctor",
+        "category": "SecureCode",
         "icon": "$(export)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "projectSetupDoctor",
-          "title": "Setup Doctor",
+          "id": "secureCode",
+          "title": "SecureCode",
           "icon": "media/icon.svg"
         }
       ]
     },
     "views": {
-      "projectSetupDoctor": [
+      "secureCode": [
         {
           "type": "webview",
-          "id": "projectSetupDoctor.sidebar",
+          "id": "secureCode.sidebar",
           "name": "Health Dashboard"
         }
       ]
     },
     "configuration": {
-      "title": "Project Setup Doctor",
+      "title": "SecureCode",
       "properties": {
-        "projectSetupDoctor.backendPort": {
+        "secureCode.backendPort": {
           "type": "number",
           "default": 18120,
           "description": "Port for the analysis backend server.",
           "minimum": 1024,
           "maximum": 65535
         },
-        "projectSetupDoctor.autoScanOnOpen": {
+        "secureCode.autoScanOnOpen": {
           "type": "boolean",
           "default": true,
           "description": "Automatically scan project when workspace is opened."
         },
-        "projectSetupDoctor.scanDebounceMs": {
+        "secureCode.scanDebounceMs": {
           "type": "number",
           "default": 2000,
           "description": "Debounce interval for file change re-scans (ms).",
           "minimum": 500,
           "maximum": 30000
         },
-        "projectSetupDoctor.enableTelemetry": {
+        "secureCode.enableTelemetry": {
           "type": "boolean",
           "default": false,
           "description": "Enable anonymous usage telemetry (disabled by default)."
         },
-        "projectSetupDoctor.enableAI": {
+        "secureCode.enableAI": {
           "type": "boolean",
           "default": false,
           "description": "Enable AI-powered analysis (requires OpenAI-compatible API key)."
         },
-        "projectSetupDoctor.aiApiKey": {
+        "secureCode.aiApiKey": {
           "type": "string",
           "default": "",
           "description": "API key for AI analysis (OpenAI-compatible).",
           "isPassword": true
         },
-        "projectSetupDoctor.aiBaseUrl": {
+        "secureCode.aiBaseUrl": {
           "type": "string",
           "default": "https://api.openai.com/v1",
           "description": "Base URL for OpenAI-compatible API."
         },
-        "projectSetupDoctor.excludePaths": {
+        "secureCode.excludePaths": {
           "type": "array",
           "default": [
             "node_modules",
@@ -153,19 +153,19 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "projectSetupDoctor.scanProject"
+          "command": "secureCode.scanProject"
         },
         {
-          "command": "projectSetupDoctor.showHealthReport"
+          "command": "secureCode.showHealthReport"
         },
         {
-          "command": "projectSetupDoctor.runAutoFixes"
+          "command": "secureCode.runAutoFixes"
         },
         {
-          "command": "projectSetupDoctor.generateEnvTemplate"
+          "command": "secureCode.generateEnvTemplate"
         },
         {
-          "command": "projectSetupDoctor.exportReport"
+          "command": "secureCode.exportReport"
         }
       ]
     }

@@ -7,7 +7,7 @@ export function registerHealthReportCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "projectSetupDoctor.showHealthReport",
+      "secureCode.showHealthReport",
       async () => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) return;
@@ -19,7 +19,7 @@ export function registerHealthReportCommand(
             "Scan"
           );
           if (action === "Scan") {
-            vscode.commands.executeCommand("projectSetupDoctor.scanProject");
+            vscode.commands.executeCommand("secureCode.scanProject");
           }
           return;
         }

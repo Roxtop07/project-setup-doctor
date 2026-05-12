@@ -15,7 +15,7 @@ let backendManager: BackendManager | undefined;
 export async function activate(
   context: vscode.ExtensionContext
 ): Promise<void> {
-  const outputChannel = vscode.window.createOutputChannel("Setup Doctor");
+  const outputChannel = vscode.window.createOutputChannel("SecureCode");
   context.subscriptions.push(outputChannel);
 
   backendManager = new BackendManager(outputChannel);
@@ -53,16 +53,16 @@ export async function activate(
   }
 
   const autoScan = vscode.workspace
-    .getConfiguration("projectSetupDoctor")
+    .getConfiguration("secureCode")
     .get<boolean>("autoScanOnOpen", true);
 
   if (autoScan && backendManager.isReady) {
-    vscode.commands.executeCommand("projectSetupDoctor.scanProject");
+    vscode.commands.executeCommand("secureCode.scanProject");
   }
 
   registerFileWatcher(context, cache);
 
-  outputChannel.appendLine("Project Setup Doctor activated.");
+  outputChannel.appendLine("Project SecureCode activated.");
 }
 
 export function deactivate(): void {
@@ -83,14 +83,14 @@ function registerFileWatcher(
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   const debounceMs = vscode.workspace
-    .getConfiguration("projectSetupDoctor")
+    .getConfiguration("secureCode")
     .get<number>("scanDebounceMs", 2000);
 
   const trigger = () => {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       cache.clear();
-      vscode.commands.executeCommand("projectSetupDoctor.scanProject");
+      vscode.commands.executeCommand("secureCode.scanProject");
     }, debounceMs);
   };
 

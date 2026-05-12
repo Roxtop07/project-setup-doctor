@@ -12,7 +12,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
 
   constructor() {
     this.collection =
-      vscode.languages.createDiagnosticCollection("projectSetupDoctor");
+      vscode.languages.createDiagnosticCollection("secureCode");
   }
 
   update(rootPath: string, issues: Issue[]): void {
@@ -41,7 +41,7 @@ export class DiagnosticsProvider implements vscode.Disposable {
         `[${issue.analyzer}] ${issue.message}`,
         SEVERITY_MAP[issue.severity]
       );
-      diag.source = "Setup Doctor";
+      diag.source = "SecureCode";
       diag.code = issue.id;
 
       byFile.get(key)!.push(diag);

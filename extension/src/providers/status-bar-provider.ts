@@ -10,13 +10,13 @@ export class StatusBarProvider implements vscode.Disposable {
       50
     );
     this.item.command = "projectSetupDoctor.showHealthReport";
-    this.item.tooltip = "Project Setup Doctor - Click to view health report";
+    this.item.tooltip = "SecureCode - Click to view health report";
     this.setIdle();
     this.item.show();
   }
 
   setIdle(): void {
-    this.item.text = "$(pulse) Setup Doctor";
+    this.item.text = "$(pulse) SecureCode";
     this.item.backgroundColor = undefined;
   }
 

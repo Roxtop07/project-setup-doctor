@@ -1,7 +1,7 @@
 [project]
-name = "project-setup-doctor-backend"
+name = "securecode-backend"
 version = "0.1.0"
-description = "Analysis backend for Project Setup Doctor"
+description = "Analysis backend for SecureCode"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [

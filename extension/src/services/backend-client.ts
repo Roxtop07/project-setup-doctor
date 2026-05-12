@@ -6,7 +6,7 @@ export class BackendClient {
 
   constructor() {
     const port = vscode.workspace
-      .getConfiguration("projectSetupDoctor")
+      .getConfiguration("secureCode")
       .get<number>("backendPort", 18120);
     this.baseUrl = `http://127.0.0.1:${port}`;
   }

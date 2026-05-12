@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import type { ScanResult } from "../types";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "projectSetupDoctor.sidebar";
+  public static readonly viewType = "secureCode.sidebar";
   private view?: vscode.WebviewView;
   private lastResult?: ScanResult;
 
@@ -25,16 +25,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((msg) => {
       switch (msg.command) {
         case "scan":
-          vscode.commands.executeCommand("projectSetupDoctor.scanProject");
+          vscode.commands.executeCommand("secureCode.scanProject");
           break;
         case "autofix":
           vscode.commands.executeCommand(
-            "projectSetupDoctor.runAutoFixes",
+            "secureCode.runAutoFixes",
             msg.fixIds
           );
           break;
         case "export":
-          vscode.commands.executeCommand("projectSetupDoctor.exportReport");
+          vscode.commands.executeCommand("secureCode.exportReport");
           break;
       }
     });
@@ -202,7 +202,7 @@ function render(data) {
 
   document.getElementById('app').innerHTML = \`
     <div class="header">
-      <h2>Setup Doctor</h2>
+      <h2>SecureCode</h2>
     </div>
 
     <div class="score-ring">

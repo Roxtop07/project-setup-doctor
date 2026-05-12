@@ -16,7 +16,7 @@ export function registerScanCommand(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "projectSetupDoctor.scanProject",
+      "secureCode.scanProject",
       async () => {
         const folders = vscode.workspace.workspaceFolders;
         if (!folders?.length) {
@@ -61,11 +61,11 @@ export function registerScanCommand(
 
         if (errorCount === 0 && warnCount === 0) {
           vscode.window.showInformationMessage(
-            `Setup Doctor: Health score ${Math.round(merged.health_score.total)}/100 — no issues found.`
+            `SecureCode: Health score ${Math.round(merged.health_score.total)}/100 — no issues found.`
           );
         } else {
           vscode.window.showInformationMessage(
-            `Setup Doctor: ${errorCount} errors, ${warnCount} warnings. Score: ${Math.round(merged.health_score.total)}/100`
+            `SecureCode: ${errorCount} errors, ${warnCount} warnings. Score: ${Math.round(merged.health_score.total)}/100`
           );
         }
       }
