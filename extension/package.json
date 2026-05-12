@@ -2,7 +2,7 @@
   "name": "securecode",
   "displayName": "SecureCode",
   "description": "Scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "manish-srivastav",
   "license": "MIT",
   "icon": "media/icon.png",
