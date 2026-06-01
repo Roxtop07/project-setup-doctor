@@ -40,6 +40,7 @@ def _register_defaults() -> None:
     from analyzers.dart_analyzer import DartAnalyzer
     from analyzers.elixir_analyzer import ElixirAnalyzer
     from analyzers.c_cpp_analyzer import CCppAnalyzer
+    from analyzers.ai_analyzer import AIAnalyzer
 
     for cls in [
         EnvAnalyzer,
@@ -58,8 +59,9 @@ def _register_defaults() -> None:
         DartAnalyzer,
         ElixirAnalyzer,
         CCppAnalyzer,
+        AIAnalyzer,
     ]:
-        AnalyzerRegistry.register(cls())
+        AnalyzerRegistry.register(cls())  # type: ignore[abstract]
 
 
 _register_defaults()

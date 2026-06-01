@@ -95,12 +95,31 @@ export interface HealthScore {
   grade: "A" | "B" | "C" | "D" | "F";
 }
 
+export type AIProviderName =
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "openai-compatible";
+
+export interface AIConfigRequest {
+  provider: AIProviderName;
+  api_key: string;
+  base_url?: string;
+  model?: string;
+  enabled: boolean;
+}
+
 export interface ScanResult {
   project_info: ProjectInfo;
   issues: Issue[];
   health_score: HealthScore;
   scan_duration_ms: number;
   timestamp: string;
+  ai_summary?: string | null;
+  ai_score?: number | null;
+  ai_provider?: string | null;
+  ai_model?: string | null;
+  ai_error?: string | null;
 }
 
 export interface AutoFixResult {

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from models.contracts import HealthScore, Issue, ProjectInfo, ScoreBreakdown, Severity
 
 WEIGHTS = {
@@ -22,12 +24,19 @@ ANALYZER_TO_CATEGORY = {
     "environment": "environment_completeness",
     "security": "security",
     "docker": "setup_readiness",
+    "ai": "setup_readiness",
 }
+
+AI_BLEND_WEIGHT = 0.3
 
 
 class ScoringEngine:
     @staticmethod
-    def compute(project_info: ProjectInfo, issues: list[Issue]) -> HealthScore:
+    def compute(
+        project_info: ProjectInfo,
+        issues: list[Issue],
+        ai_score: Optional[float] = None,
+    ) -> HealthScore:
         category_scores: dict[str, float] = {
             "dependency_hygiene": 100.0,
             "docs_quality": 100.0,
@@ -54,6 +63,9 @@ class ScoringEngine:
         total = sum(
             category_scores[k] * WEIGHTS[k] for k in WEIGHTS
         )
+        if ai_score is not None:
+            clamped_ai = max(0.0, min(100.0, float(ai_score)))
+            total = (1 - AI_BLEND_WEIGHT) * total + AI_BLEND_WEIGHT * clamped_ai
         total = max(0.0, min(100.0, total))
 
         return HealthScore(

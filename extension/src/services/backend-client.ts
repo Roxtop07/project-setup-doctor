@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
-import type { ScanResult, AutoFixResult, BackendStatus } from "../types";
+import type {
+  AIConfigRequest,
+  AIProviderName,
+  AutoFixResult,
+  BackendStatus,
+  ScanResult,
+} from "../types";
 
 export class BackendClient {
   private baseUrl: string;
@@ -15,6 +21,29 @@ export class BackendClient {
     return `http://127.0.0.1:${port}`;
   }
 
+  private readAIConfig(): AIConfigRequest | undefined {
+    const cfg = vscode.workspace.getConfiguration("secureCode");
+    const enabled = cfg.get<boolean>("enableAI", false);
+    if (!enabled) {
+      return undefined;
+    }
+    const provider = cfg.get<string>("aiProvider", "openai") as AIProviderName;
+    const apiKey = cfg.get<string>("aiApiKey", "");
+    const baseUrl = cfg.get<string>("aiBaseUrl", "");
+    const model = cfg.get<string>("aiModel", "");
+    // Local providers may run without a key; require one for everything else.
+    if (provider !== "openai-compatible" && !apiKey) {
+      return undefined;
+    }
+    return {
+      provider,
+      api_key: apiKey,
+      base_url: baseUrl || undefined,
+      model: model || undefined,
+      enabled: true,
+    };
+  }
+
   async checkHealth(): Promise<BackendStatus> {
     return this.request<BackendStatus>("GET", "/health");
   }
@@ -23,12 +52,14 @@ export class BackendClient {
     return this.request<ScanResult>("POST", "/scan", {
       root_path: rootPath,
       incremental,
+      ai_config: this.readAIConfig(),
     });
   }
 
   async getHealthScore(rootPath: string): Promise<ScanResult> {
     return this.request<ScanResult>("POST", "/health-score", {
       root_path: rootPath,
+      ai_config: this.readAIConfig(),
     });
   }
 

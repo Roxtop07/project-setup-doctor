@@ -151,6 +151,25 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   @keyframes spin { to { transform: rotate(360deg); } }
   .counts { display: flex; gap: 12px; margin-bottom: 12px; font-size: 12px; }
   .counts .count { display: flex; align-items: center; gap: 4px; }
+  .ai-card {
+    margin-bottom: 16px; padding: 10px 12px; border-radius: 6px;
+    background: var(--input-bg);
+    border-left: 3px solid var(--btn-bg);
+  }
+  .ai-card .ai-head {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; opacity: 0.8;
+  }
+  .ai-card .ai-summary { font-size: 12px; line-height: 1.45; }
+  .ai-card .ai-meta { margin-top: 6px; font-size: 10px; opacity: 0.6; }
+  .ai-card.error { border-left-color: var(--badge-error); }
+  .ai-badge {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    padding: 1px 5px; border-radius: 3px; margin-left: 6px;
+    background: var(--btn-bg); color: var(--btn-fg);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
@@ -171,6 +190,15 @@ function exportReport() { vscode.postMessage({ command: 'export' }); }
 
 function severityIcon(s) {
   return s === 'error' ? '✖' : s === 'warning' ? '⚠' : 'ℹ';
+}
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function scoreColor(v) {
@@ -200,10 +228,36 @@ function render(data) {
     ['Environment', bd.environment_completeness],
   ];
 
+  const aiSummary = data.ai_summary;
+  const aiError = data.ai_error;
+  const aiProvider = data.ai_provider;
+  const aiModel = data.ai_model;
+  const aiScore = data.ai_score;
+  let aiBlock = '';
+  if (aiSummary) {
+    const metaParts = [];
+    if (aiProvider) metaParts.push(aiProvider);
+    if (aiModel) metaParts.push(aiModel);
+    if (typeof aiScore === 'number') metaParts.push('AI score ' + Math.round(aiScore));
+    aiBlock = \`
+      <div class="ai-card">
+        <div class="ai-head">AI Insight</div>
+        <div class="ai-summary">\${escapeHtml(aiSummary)}</div>
+        \${metaParts.length ? '<div class="ai-meta">' + metaParts.join(' • ') + '</div>' : ''}
+      </div>\`;
+  } else if (aiError) {
+    aiBlock = \`
+      <div class="ai-card error">
+        <div class="ai-head">AI unavailable</div>
+        <div class="ai-summary">\${escapeHtml(aiError)}</div>
+      </div>\`;
+  }
+
   document.getElementById('app').innerHTML = \`
     <div class="header">
       <h2>SecureCode</h2>
     </div>
+    \${aiBlock}
 
     <div class="score-ring">
       <svg width="72" height="72" viewBox="0 0 72 72">
@@ -249,7 +303,7 @@ function render(data) {
         issues.map(i => \`
           <div class="issue \${i.severity}">
             <span class="icon">\${severityIcon(i.severity)}</span>
-            <span class="text">\${i.message}</span>
+            <span class="text">\${escapeHtml(i.message)}\${i.analyzer === 'ai' ? '<span class="ai-badge">AI</span>' : ''}</span>
             \${i.fix ? '<button class="fix-btn" onclick="autofix([\\'' + i.fix.id + '\\'])">Fix</button>' : ''}
           </div>
         \`).join('')}

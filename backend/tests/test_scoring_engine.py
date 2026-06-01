@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import pytest
+from typing import Any
+
 from scoring.scoring_engine import ScoringEngine
 from detectors.project_detector import ProjectDetector
 from models.contracts import Issue, Severity, ProjectInfo, ProjectType
 
 
-def _make_info(**kwargs) -> ProjectInfo:
-    defaults = dict(
+def _make_info(**kwargs: Any) -> ProjectInfo:
+    defaults: dict[str, Any] = dict(
         types=[ProjectType.NODEJS],
         root_path="/tmp/test",
         name="test",
@@ -100,3 +101,24 @@ class TestScoringEngine:
         info = ProjectDetector(empty_project).detect()
         score = ScoringEngine.compute(info, [])
         assert 0 <= score.total <= 100
+
+    def test_ai_score_blends_when_provided(self):
+        info = _make_info(has_env_example=True, has_dockerfile=True)
+        baseline = ScoringEngine.compute(info, [])
+        # AI score of 0 should drag the total down vs the rule-based baseline.
+        blended_low = ScoringEngine.compute(info, [], ai_score=0)
+        assert blended_low.total < baseline.total
+        # AI score of 100 should pull total up vs a poor baseline.
+        bad_info = _make_info(has_readme=False)
+        bad_baseline = ScoringEngine.compute(bad_info, [])
+        blended_high = ScoringEngine.compute(bad_info, [], ai_score=100)
+        assert blended_high.total > bad_baseline.total
+        # Clamping: AI score outside [0, 100] is clamped.
+        clamped = ScoringEngine.compute(info, [], ai_score=200)
+        assert 0 <= clamped.total <= 100
+
+    def test_ai_score_none_keeps_baseline(self):
+        info = _make_info()
+        with_none = ScoringEngine.compute(info, [], ai_score=None)
+        baseline = ScoringEngine.compute(info, [])
+        assert with_none.total == baseline.total

@@ -108,10 +108,21 @@ class HealthScore(BaseModel):
     grade: str = "F"
 
 
+class AIConfigRequest(BaseModel):
+    """AI configuration sent on /scan when the user has enabled BYOK AI."""
+
+    provider: str = "openai"
+    api_key: str = ""
+    base_url: Optional[str] = None
+    model: Optional[str] = None
+    enabled: bool = True
+
+
 class ScanRequest(BaseModel):
     root_path: str
     analyzers: Optional[list[str]] = None
     incremental: bool = False
+    ai_config: Optional[AIConfigRequest] = None
 
 
 class ScanResult(BaseModel):
@@ -120,6 +131,11 @@ class ScanResult(BaseModel):
     health_score: HealthScore = Field(default_factory=HealthScore)
     scan_duration_ms: float = 0.0
     timestamp: str = ""
+    ai_summary: Optional[str] = None
+    ai_score: Optional[float] = None
+    ai_provider: Optional[str] = None
+    ai_model: Optional[str] = None
+    ai_error: Optional[str] = None
 
 
 class AutoFixRequest(BaseModel):

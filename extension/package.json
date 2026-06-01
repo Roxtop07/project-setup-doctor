@@ -2,7 +2,7 @@
   "name": "securecode",
   "displayName": "SecureCode",
   "description": "Scans repositories and detects setup, environment, dependency, and configuration problems before you run the project.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "publisher": "manish-srivastav",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -135,18 +135,40 @@
         "secureCode.enableAI": {
           "type": "boolean",
           "default": false,
-          "description": "Enable AI-powered analysis (requires OpenAI-compatible API key)."
+          "description": "Enable AI-powered analysis. Bring your own key (BYOK) for any supported provider."
+        },
+        "secureCode.aiProvider": {
+          "type": "string",
+          "default": "openai",
+          "enum": [
+            "openai",
+            "anthropic",
+            "gemini",
+            "openai-compatible"
+          ],
+          "enumDescriptions": [
+            "OpenAI (GPT-4o, GPT-4o-mini, etc.)",
+            "Anthropic (Claude family)",
+            "Google Gemini",
+            "Any OpenAI-compatible endpoint (Ollama, LM Studio, vLLM)"
+          ],
+          "description": "AI provider used for analysis when AI is enabled."
         },
         "secureCode.aiApiKey": {
           "type": "string",
           "default": "",
-          "description": "API key for AI analysis (OpenAI-compatible).",
+          "description": "API key for the selected AI provider. Not required for openai-compatible/local endpoints.",
           "isPassword": true
         },
         "secureCode.aiBaseUrl": {
           "type": "string",
-          "default": "https://api.openai.com/v1",
-          "description": "Base URL for OpenAI-compatible API."
+          "default": "",
+          "description": "Optional base URL override. Leave empty to use the provider default (e.g. http://localhost:11434/v1 for Ollama)."
+        },
+        "secureCode.aiModel": {
+          "type": "string",
+          "default": "",
+          "description": "Optional model name override (e.g. gpt-4o-mini, claude-haiku-4-5, gemini-2.0-flash, llama3.2). Leave empty for the provider default."
         },
         "secureCode.excludePaths": {
           "type": "array",

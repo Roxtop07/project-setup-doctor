@@ -110,7 +110,9 @@ class TestAPI:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             resp = await client.post("/scan", json={"root_path": "/nonexistent/path"})
-            assert resp.status_code == 400
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["issues"][0]["id"] == "scan-init-error"
 
     async def test_autofix_rejects_too_many_ids(self):
         transport = ASGITransport(app=app)
@@ -120,3 +122,57 @@ class TestAPI:
                 "fix_ids": [f"fix-{i}" for i in range(100)],
             })
             assert resp.status_code == 422
+
+    async def test_scan_without_ai_config_omits_ai_fields(self, node_project: str):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.post("/scan", json={"root_path": node_project})
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data.get("ai_summary") is None
+            assert data.get("ai_score") is None
+            assert data.get("ai_error") is None
+            assert not any(i["analyzer"] == "ai" for i in data["issues"])
+
+    async def test_scan_with_ai_config_roundtrips_summary(self, node_project: str):
+        """Stub the AI provider via the override ContextVar and confirm the
+        ai_summary / ai_score round-trip through the API response."""
+        from ai.runtime import override_ai_provider
+
+        class _Stub:
+            async def complete(self, system, user, schema, client=None):
+                return {
+                    "findings": [
+                        {"severity": "info", "message": "Add a CONTRIBUTING.md"},
+                    ],
+                    "ai_score": 77,
+                    "ai_summary": "Looks solid — minor docs gaps.",
+                }
+
+        token = override_ai_provider.set(_Stub())
+        try:
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                resp = await client.post(
+                    "/scan",
+                    json={
+                        "root_path": node_project,
+                        "ai_config": {
+                            "provider": "openai",
+                            "api_key": "sk-test",
+                            "model": "gpt-4o-mini",
+                            "enabled": True,
+                        },
+                    },
+                )
+                assert resp.status_code == 200
+                data = resp.json()
+                assert data["ai_summary"] == "Looks solid — minor docs gaps."
+                assert data["ai_score"] == 77
+                assert data["ai_provider"] == "openai"
+                assert data["ai_model"] == "gpt-4o-mini"
+                ai_issues = [i for i in data["issues"] if i["analyzer"] == "ai"]
+                assert len(ai_issues) == 1
+                assert ai_issues[0]["id"] == "ai-1"
+        finally:
+            override_ai_provider.reset(token)
