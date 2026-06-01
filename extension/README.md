@@ -22,7 +22,9 @@
 
 **SecureCode** scans your repository and detects setup, environment, dependency, security, and configuration problems — **before you even run the project**.
 
-No API keys. No cloud. No telemetry. Just fast, offline analysis.
+Fast, offline rule-based analysis by default. Optionally, **bring your own AI key** (OpenAI, Anthropic, Gemini, or any OpenAI-compatible endpoint like Ollama) for deeper insights, fix suggestions, and an overall AI-blended score.
+
+No telemetry. No cloud unless *you* opt in by configuring an AI provider — and even then, it's *your* key talking to *your* chosen endpoint.
 
 ---
 
@@ -50,6 +52,7 @@ Every developer has wasted hours on:
 | **README Checker** | Verifies install instructions, setup sections, environment variable docs |
 | **Docker Analyzer** | `:latest` tag warnings, missing `USER` directive, missing `.dockerignore` |
 | **Health Score** | Weighted 0-100 score with A-F grading across 5 categories |
+| **AI Analysis (BYOK, optional)** | Plug in any OpenAI / Anthropic / Gemini / Ollama key for AI-detected issues, summary, and a blended score |
 | **Auto Fixes** | One-click: create `.env.example`, generate Dockerfile, install missing deps |
 | **JSON Export** | Export full scan results for CI/CD integration |
 
@@ -130,6 +133,38 @@ Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `SecureCode`:
 | `secureCode.scanDebounceMs` | `2000` | Delay before re-scanning after file changes |
 | `secureCode.enableTelemetry` | `false` | Anonymous telemetry (off by default) |
 | `secureCode.excludePaths` | `[...]` | Directories to skip during scanning |
+| `secureCode.enableAI` | `false` | Turn on optional AI-powered analysis (BYOK) |
+| `secureCode.aiProvider` | `openai` | `openai` · `anthropic` · `gemini` · `openai-compatible` |
+| `secureCode.aiApiKey` | `""` | Your API key for the selected provider (not required for local Ollama) |
+| `secureCode.aiBaseUrl` | `""` | Optional base URL override (e.g. `http://localhost:11434/v1` for Ollama) |
+| `secureCode.aiModel` | `""` | Optional model override (e.g. `gpt-4o-mini`, `claude-haiku-4-5`, `gemini-2.0-flash`, `llama3.2`) |
+
+---
+
+## AI-Powered Analysis (Optional, BYOK)
+
+Turn on `secureCode.enableAI`, pick a provider, and paste your API key. SecureCode will:
+
+- **Detect issues the rule-based analyzers miss** — context-aware findings tagged with an `AI` badge in the sidebar
+- **Summarize project health** in a short, human-readable paragraph above the issues list
+- **Score the project holistically** — the AI's 0-100 score blends into your overall health score (70% rule-based, 30% AI)
+- **Never break a scan** — if the provider fails (bad key, network, rate limit), rule-based analysis still completes
+
+### Supported providers
+
+| Provider | Default model | Where to get a key |
+|----------|---------------|---------------------|
+| **OpenAI** | `gpt-4o-mini` | [platform.openai.com](https://platform.openai.com/api-keys) |
+| **Anthropic** | `claude-haiku-4-5` | [console.anthropic.com](https://console.anthropic.com/) |
+| **Google Gemini** | `gemini-2.0-flash` | [aistudio.google.com](https://aistudio.google.com/apikey) |
+| **OpenAI-compatible** | (your choice, e.g. `llama3.2`) | Local — point `aiBaseUrl` at Ollama / LM Studio / vLLM |
+
+### How it stays safe
+
+- **You own the key** — stored in VS Code settings, never sent anywhere except the provider you chose
+- **Local Ollama is fully offline** — no key, no internet round-trip
+- **Disabled by default** — nothing AI-related runs until you flip the switch
+- **Backend `.env` fallback** — set `AI_PROVIDER`, `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` for headless/CI usage
 
 ---
 
@@ -192,10 +227,11 @@ Both must be available on your `PATH`. The extension will notify you if they're 
 
 ## Privacy & Telemetry
 
-- **Offline-first** — all analysis runs locally on `127.0.0.1`
+- **Offline-first** — all rule-based analysis runs locally on `127.0.0.1`
 - **No telemetry** by default — opt-in only
-- **No cloud** — your code never leaves your machine
-- **No API keys required** — core features work without any configuration
+- **No cloud unless you choose one** — AI is opt-in; without it, your code never leaves your machine
+- **BYOK AI** — when enabled, only the AI provider *you* configure receives a compact project context (file tree + key config files, capped at ~12 KB). No SecureCode server in between
+- **Local AI option** — point `aiBaseUrl` at a local Ollama / LM Studio endpoint to keep AI analysis fully offline
 - **No data collection** — we don't track usage, projects, or scan results
 
 ---
